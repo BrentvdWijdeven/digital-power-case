@@ -15,6 +15,8 @@ from pyspark.ml.evaluation import BinaryClassificationEvaluator
 # determine script runtime
 start_time = timeit.default_timer()
 
+
+""" De initialize moet mogelijk naar main.py"""
 # Initialize spark session
 sc = SparkContext.getOrCreate()
 spark = SparkSession.builder.master('local[*]').appName('twitter_sentiment_analysis').config("spark.ui.port","4040")\
@@ -22,34 +24,55 @@ spark = SparkSession.builder.master('local[*]').appName('twitter_sentiment_analy
 # access spark web ui by visiting http://localhost:4040/jobs/ . This is only accessible while script is running!
 
 
-# define a schema
-schema = tp.StructType([
-    tp.StructField(name= 'target',      dataType= tp.ByteType(),   nullable= True),
-    tp.StructField(name= 'ids',         dataType= tp.IntegerType(),    nullable= False),
-    tp.StructField(name= 'date',        dataType= tp.DateType(),   nullable= True),
-    tp.StructField(name= 'flag',        dataType= tp.StringType(), nullable= True),
-    tp.StructField(name= 'user',        dataType= tp.StringType(),    nullable= True),
-    tp.StructField(name= 'text',        dataType= tp.StringType(),   nullable= True)
-])
+def read_csv_to_spark_df(data_path, file_name):
+
+    # schema to use for reading csv
+    schema = tp.StructType([
+        tp.StructField(name='target', dataType=tp.ByteType(), nullable=True),
+        tp.StructField(name='ids', dataType=tp.IntegerType(), nullable=False),
+        tp.StructField(name='date', dataType=tp.DateType(), nullable=True),
+        tp.StructField(name='flag', dataType=tp.StringType(), nullable=True),
+        tp.StructField(name='user', dataType=tp.StringType(), nullable=True),
+        tp.StructField(name='text', dataType=tp.StringType(), nullable=True)
+    ])
+
+    # read the data again with the defined schema
+    spark_df = spark.read.format("csv").option("header", "false", ).option("delimiter", ",").schema(schema) \
+        .load(data_path, file_name)
+
+    return spark_df
 
 
-# read the data again with the defined schema
-my_data = spark.read.format("csv").option("header", "false", ).option("delimiter", ",").schema(schema)\
-    .load('data/twitter_sentiment/twitter_data.csv')
-
-# my_data = my_data.limit(1000)
-
-my_data = my_data.drop('date', 'flag')
-
-# drop rows with nan values
-my_data = my_data.dropna(how='any')
+my_data = read_csv_to_spark_df('data/twitter_sentiment/', 'twitter_data2.csv')
 
 
+def drop_columns_and_rows(df, columns_to_drop): # can add type of df here in function argument
+
+    # drop columns
+    df = df.drop(*columns_to_drop)
+
+    # drop rows with nan values
+    df = df.dropna(how='any')
+
+    return df
+
+
+my_data = drop_columns_and_rows(df=my_data, columns_to_drop=['date', 'flag'])
+
+
+def train_test_split(df, split_percentages):
+    # split_percentages is list with three percentages: train, valid, test
+
+    (train_set, val_set, test_set) = df.randomSplit(split_percentages, seed=2000)
+
+    # hier nog ff testen of de dubbele () niet teveel is
+    return (train_set, val_set, test_set)
 
 # train test split
-(train_set, val_set, test_set) = my_data.randomSplit([0.95, 0.025, 0.025], seed=2000)
+(train_set, val_set, test_set) = my_data.randomSplit(df=my_data , split_percentages=[0.95, 0.025, 0.025])
 print(train_set.show())
 print('hallee')
+
 
 
 # some kind of prediction
@@ -60,6 +83,8 @@ First, check number of partitions in dataframe via df.rdd.getNumPartitions() Aft
 """
 
 # evt toevoegen: parameter tuning logistic regression, text cleaning, confusion matrix evaluation
+
+# function: create pipeline and run pipeline
 
 evaluator = BinaryClassificationEvaluator(rawPredictionCol="rawPrediction")
 
@@ -75,6 +100,8 @@ pipelineFit = pipeline.fit(train_set)
 predictions = pipelineFit.transform(val_set)
 
 
+# evaluate function
+
 accuracy = predictions.filter(predictions.label == predictions.prediction).count() / float(val_set.count())
 roc_auc = evaluator.evaluate(predictions)
 
@@ -87,14 +114,11 @@ end_time = timeit.default_timer()
 
 print(end_time - start_time)
 
+# sleep is useful to inspect spark web ui better/longer
 # import time
 # time.sleep(300)
 
-# SAVE OUTPUT DF AS CSV?
-
-# df = predictions.to_pandas_on_spark()
-
-
+# SAVE OUTPUT DF AS CSV
 # predictions.write.option("header", 'true').csv("results/predictions.csv")
 predictions.toPandas().to_csv('results/predictions.csv')
 
