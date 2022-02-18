@@ -1,6 +1,6 @@
 from extract_data import download_or_load_dataset
 from train_pipeline import read_csv_to_spark_df, drop_columns_and_rows, train_test_split, load_or_fit_model_pipeline, \
-    evaluate_pipeline_performance
+    evaluate_pipeline_performance, spark
 import timeit
 
 
@@ -41,7 +41,7 @@ def train_evaluate_save_pipeline():  # function name is niet overtuigend, missch
     return predictions_dataset, pipeline_fitted
 
 
-df_predictions, fitted_pipeline = train_evaluate_save_pipeline()
+# df_predictions, fitted_pipeline = train_evaluate_save_pipeline()
 
 
 def clean_incoming_tweets(raw_new_tweets):
@@ -67,21 +67,45 @@ def run_and_save_incoming_tweets_prediction(pipeline, raw_new_tweets):
 
     return incoming_tweets_predictions
 
+#
+# incoming_tweets_data = read_csv_to_spark_df(data_destination_folder, incoming_data_file_name)
+# incoming_tweets_data.show()
+#
+# tweet_predictions = run_and_save_incoming_tweets_prediction(pipeline=fitted_pipeline,
+#                                                             raw_new_tweets=incoming_tweets_data)
+#
+# tweet_predictions.show()
+#
+# tweet_predictions.toPandas().to_csv('results/incoming_twitter_data_predictions.csv')
 
-incoming_tweets_data = read_csv_to_spark_df(data_destination_folder, incoming_data_file_name)
-incoming_tweets_data.show()
 
-tweet_predictions = run_and_save_incoming_tweets_prediction(pipeline=fitted_pipeline,
-                                                            raw_new_tweets=incoming_tweets_data)
+# from pyspark import SparkContext
+# from pyspark.sql import SparkSession
+#
+# """ De initialize moet mogelijk naar main.py"""
+# # Initialize spark session
+# sc = SparkContext.getOrCreate()
+# pyspark = SparkSession.builder.master('local[*]').appName('twitter_sentiment_analysis').config("spark.ui.port", "4040")\
+#     .getOrCreate()
+#
+#
+# pyspark.conf.set(
+#     "fs.azure.account.key.digitalpowerstorage1.blob.core.windows.net",
+#     "tL2YmYTqrfeGma1/DRaTH9RTmZNKKZLn6O6fDKI3JnmJGfW8Nb+F2zRJ8m7uPRF71l5O1BRb88SrDc1lw+Pb+A=="
+# )
+#
+#
+# spark_df = spark.read.format('csv').option('header', True).\
+#     load("wasbs://dp-blob1@digitalpowerstorage1.blob.core.windows.net/incoming_twitter_data.csv")
+#
 
-tweet_predictions.show()
-
-tweet_predictions.toPandas().to_csv('results/incoming_twitter_data_predictions.csv')
 
 
-
+# print(spark_df.show())
 
 end_time = timeit.default_timer()
 
 print(end_time - start_time)
 
+# to write to blob storage without pyspark but with normal python: https://www.youtube.com/watch?v=enhJfb_6KYU
+# https://stackoverflow.com/questions/62384733/using-azure-storage-blob-to-write-python-dataframe-as-csv-into-azure-blob
