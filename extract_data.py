@@ -31,6 +31,17 @@ def download_and_unzip_twitter_dataset(destination_folder, data_file_name):
 
     return print('Dataset downloaded & unzipped')
 
+def download_or_load_dataset(destination_folder, data_file_name):
+    """ Opzet is nu een one-time download en nog niet een daily api call of iets dergelijks. dus nog niet optimaal. """
+
+    if not os.path.exists(destination_folder + data_file_name):
+
+        # download and unzip twitter dataset
+        download_and_unzip_twitter_dataset(destination_folder, data_file_name)
+
+    else:
+        print('dataset is already downloaded and is available in destination folder')
+
 
 
 

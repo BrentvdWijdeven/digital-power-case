@@ -123,6 +123,7 @@ def fit_lr_model_pipeline(pipeline_model, pipeline_path, model_path, train_set):
 def load_or_fit_model_pipeline(pipeline_path, model_path, train_set):
 
     if not os.path.exists('model/lr_model_pipeline'):
+        print('Pipeline does not exist, start fitting pipeline now')
 
         pipeline = create_classification_pipeline()
 
@@ -131,6 +132,8 @@ def load_or_fit_model_pipeline(pipeline_path, model_path, train_set):
                                                              model_path=model_path, train_set=train_set)
 
     else:
+        print('Pipeline already exists, loading pipeline now')
+
         pipelineFit = PipelineModel.load(pipeline_path)
 
         train_df_fitted = pipelineFit.transform(train_set)
@@ -164,3 +167,4 @@ def evaluate_pipeline_performance(test_set, pipeline_fitted):
     print("ROC-AUC: {0:.4f}".format(roc_auc))
 
     return accuracy, roc_auc, predictions_dataset
+
