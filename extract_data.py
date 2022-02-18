@@ -1,6 +1,8 @@
 from kaggle.api.kaggle_api_extended import KaggleApi
 import zipfile
 import os
+import pandas as pd
+
 
 # DOES NOT WORK ON MAC!!!
 # import os
@@ -10,7 +12,7 @@ import os
 # BEST IS TO USE kaggle.json BUT THIS FILE SHOULD BE PLACED IN USER HOME DIRECTORY!
 
 # so for now, use pycharm environment variables to solve the problem
-def download_and_unzip_twitter_dataset(destination_folder, data_file_name):
+def download_and_unzip_twitter_dataset(destination_folder, download_data_file_name):
 
     # initialize Kaggle api
     api = KaggleApi()
@@ -26,23 +28,49 @@ def download_and_unzip_twitter_dataset(destination_folder, data_file_name):
         zip_files = zipref.namelist()
 
         # rename file name to twitter_data.csv
-        os.rename(destination_folder + zip_files[0], destination_folder + data_file_name)
+        os.rename(destination_folder + zip_files[0], destination_folder + download_data_file_name)
 
 
     return print('Dataset downloaded & unzipped')
 
-def download_or_load_dataset(destination_folder, data_file_name):
+
+def split_dataset_training_and_incoming_sets(destination_folder, download_data_file_name, file_name, incoming_data_file_name):
+
+    # read twitter csv
+    file_path = destination_folder + download_data_file_name
+    twitter_data = pd.read_csv(filepath_or_buffer=file_path, sep=',', header=None, encoding='latin-1')
+
+    print(twitter_data.head(10))
+    train_set_size = len(twitter_data) - 1000
+
+    train_test_validate_set = twitter_data.iloc[:train_set_size, :]
+    incoming_tweets_set = twitter_data.iloc[train_set_size:, :]
+
+
+    print('Dataset is splitted in a training set to train & test and a incoming tweets set that is used for '
+          'running the pipeline')
+
+    # save incoming_tweets_set to csv to load it at a later stage
+    # save as parquet might be faster, but with csv its easier to inspect and show df
+    train_test_validate_set.to_csv(destination_folder + file_name, index=False, header=False)
+    incoming_tweets_set.to_csv(destination_folder + incoming_data_file_name, index=False, header=False)
+
+    return train_test_validate_set
+
+def download_or_load_dataset(destination_folder, download_data_file_name, file_name, incoming_data_file_name):
     """ Opzet is nu een one-time download en nog niet een daily api call of iets dergelijks. dus nog niet optimaal. """
 
-    if not os.path.exists(destination_folder + data_file_name):
+    if not os.path.exists(destination_folder + download_data_file_name):
 
         # download and unzip twitter dataset
-        download_and_unzip_twitter_dataset(destination_folder, data_file_name)
+        download_and_unzip_twitter_dataset(destination_folder, download_data_file_name)
+
+        # create separate train and incoming dataset
+        split_dataset_training_and_incoming_sets(destination_folder, download_data_file_name, file_name,
+                                                 incoming_data_file_name)
 
     else:
-        print('dataset is already downloaded and is available in destination folder')
-
-
+        print('Dataset is already downloaded and is available in destination folder')
 
 
 """

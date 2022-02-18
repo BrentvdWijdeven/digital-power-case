@@ -25,7 +25,7 @@ def read_csv_to_spark_df(data_path, file_name):
     # schema to use for reading csv
     schema = tp.StructType([
         tp.StructField(name='target', dataType=tp.ByteType(), nullable=True),
-        tp.StructField(name='ids', dataType=tp.IntegerType(), nullable=False),
+        tp.StructField(name='ids', dataType=tp.LongType(), nullable=False),
         tp.StructField(name='date', dataType=tp.DateType(), nullable=True),
         tp.StructField(name='flag', dataType=tp.StringType(), nullable=True),
         tp.StructField(name='user', dataType=tp.StringType(), nullable=True),
@@ -33,8 +33,9 @@ def read_csv_to_spark_df(data_path, file_name):
     ])
 
     # read the data again with the defined schema
-    spark_df = spark.read.format("csv").option("header", "false", ).option("delimiter", ",").schema(schema) \
+    spark_df = spark.read.format("csv").option("header", "false").option("delimiter", ",").schema(schema) \
         .load(data_path + file_name)
+
 
     return spark_df
 
@@ -49,7 +50,7 @@ def drop_columns_and_rows(df, columns_to_drop):  # can add type of df here in fu
 
     return df
 
-
+# wil ik train, test, valid sets nog opslaan? heb wel seed=2000 staan al....
 def train_test_split(df, split_percentages):
 
     # split_percentages is list with three percentages: train, valid, test
@@ -147,8 +148,10 @@ def load_or_fit_model_pipeline(pipeline_path, model_path, train_set):
 
 def evaluate_pipeline_performance(test_set, pipeline_fitted):
 
+    test_set.show()
     # transform validation dataset (or test dataset
     predictions_dataset = pipeline_fitted.transform(test_set)
+    predictions_dataset.show(5)
 
     # evaluate function
     evaluator = BinaryClassificationEvaluator(rawPredictionCol="rawPrediction")
@@ -159,9 +162,6 @@ def evaluate_pipeline_performance(test_set, pipeline_fitted):
 
     # ROC AUC
     roc_auc = evaluator.evaluate(predictions_dataset)
-
-    # nog geen idee wat dit doet
-    # evaluator.evaluate(predictions_dataset)
 
     print("Accuracy Score: {0:.4f}".format(accuracy))
     print("ROC-AUC: {0:.4f}".format(roc_auc))

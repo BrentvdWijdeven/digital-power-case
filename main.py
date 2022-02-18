@@ -1,4 +1,4 @@
-from extract_data import download_and_unzip_twitter_dataset
+from extract_data import download_or_load_dataset
 from train_pipeline import read_csv_to_spark_df, drop_columns_and_rows, train_test_split, load_or_fit_model_pipeline, \
     evaluate_pipeline_performance
 import timeit
@@ -8,14 +8,18 @@ import timeit
 start_time = timeit.default_timer()
 
 data_destination_folder = 'data/twitter_sentiment/'
-file_name = 'twitter_data2.csv'
+download_data_file_name = 'twitter_data.csv'
+file_name = 'training_twitter_data.csv'
+incoming_data_file_name = 'incoming_twitter_data.csv'
 
 
 # deze functie nog verplaatsen nar train_pipeline.py, dan ook function arguments toevoegen
 def train_evaluate_save_pipeline():  # function name is niet overtuigend, misschien wil ik teveel doen in 1 functie
 
     # call download and unzip function for twitter dataset
-    download_and_unzip_twitter_dataset(data_file_name=file_name, destination_folder=data_destination_folder)
+    download_or_load_dataset(destination_folder=data_destination_folder,
+                             download_data_file_name=download_data_file_name,
+                             file_name=file_name, incoming_data_file_name=incoming_data_file_name)
 
     # create spark dataframe from downloaded csv
     my_data = read_csv_to_spark_df(data_destination_folder, file_name)
@@ -42,7 +46,8 @@ df_predictions, fitted_pipeline = train_evaluate_save_pipeline()
 
 def clean_incoming_tweets(raw_new_tweets):
 
-    cleaned_tweets = raw_new_tweets
+    # function from train_pipeline.py
+    cleaned_tweets = drop_columns_and_rows(raw_new_tweets, columns_to_drop=['date', 'flag'])
 
     return cleaned_tweets
 
@@ -54,18 +59,24 @@ def incoming_tweets_prediction(pipeline, incoming_tweets):
     return incoming_tweets_predictions
 
 
-def run_and_save_incoming_tweets_prediction(pipeline):
+def run_and_save_incoming_tweets_prediction(pipeline, raw_new_tweets):
 
-    cleaned_tweets = clean_incoming_tweets()
+    cleaned_tweets = clean_incoming_tweets(raw_new_tweets=raw_new_tweets)
 
     incoming_tweets_predictions = incoming_tweets_prediction(pipeline=pipeline, incoming_tweets=cleaned_tweets)
 
     return incoming_tweets_predictions
 
 
-tweet_predictions = run_and_save_incoming_tweets_prediction(pipeline=fitted_pipeline)
+incoming_tweets_data = read_csv_to_spark_df(data_destination_folder, incoming_data_file_name)
+incoming_tweets_data.show()
+
+tweet_predictions = run_and_save_incoming_tweets_prediction(pipeline=fitted_pipeline,
+                                                            raw_new_tweets=incoming_tweets_data)
 
 tweet_predictions.show()
+
+tweet_predictions.toPandas().to_csv('results/incoming_twitter_data_predictions.csv')
 
 
 
