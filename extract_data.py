@@ -40,12 +40,22 @@ def split_dataset_training_and_incoming_sets(destination_folder, download_data_f
     file_path = destination_folder + download_data_file_name
     twitter_data = pd.read_csv(filepath_or_buffer=file_path, sep=',', header=None, encoding='latin-1')
 
-    print(twitter_data.head(10))
-    train_set_size = len(twitter_data) - 1000
+    train_set_size = len(twitter_data) - 10000
 
-    train_test_validate_set = twitter_data.iloc[:train_set_size, :]
-    incoming_tweets_set = twitter_data.iloc[train_set_size:, :]
+    # RANDOM SHUFFLE DATAFRAME TO ENSURE INCOMING TWEETS SET CONTAINS BOTH POSITIVE AND NEGATIVE TWEETS
+    twitter_data = twitter_data.sample(frac=1).reset_index(drop=True)
 
+    # add columns here (instead of with read csv) as index column needed to be dropped.. Room for improvement here
+    twitter_data.columns = ['target', 'ids', 'date', 'flags', 'user', 'text']
+
+
+
+    train_test_validate_set = twitter_data.iloc[:train_set_size, :].copy()
+    incoming_tweets_set = twitter_data.iloc[train_set_size:, :].copy()
+
+    # # adjust date column to appropriate datetime format
+    # incoming_tweets_set['date'] = pd.to_datetime(incoming_tweets_set["date"])
+    # incoming_tweets_set['date'] = pd.to_datetime(incoming_tweets_set["date"].dt.strftime("%d/%m/%y %H:%M"))
 
     print('Dataset is splitted in a training set to train & test and a incoming tweets set that is used for '
           'running the pipeline')

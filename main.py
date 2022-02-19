@@ -1,6 +1,7 @@
 from extract_data import download_or_load_dataset
 from train_pipeline import read_csv_to_spark_df, drop_columns_and_rows, train_test_split, load_or_fit_model_pipeline, \
-    evaluate_pipeline_performance, spark
+    evaluate_pipeline_performance
+from upload_to_blob import upload, get_files
 import timeit
 
 
@@ -41,8 +42,6 @@ def train_evaluate_save_pipeline():  # function name is niet overtuigend, missch
     return predictions_dataset, pipeline_fitted
 
 
-# df_predictions, fitted_pipeline = train_evaluate_save_pipeline()
-
 
 def clean_incoming_tweets(raw_new_tweets):
 
@@ -67,16 +66,56 @@ def run_and_save_incoming_tweets_prediction(pipeline, raw_new_tweets):
 
     return incoming_tweets_predictions
 
-#
-# incoming_tweets_data = read_csv_to_spark_df(data_destination_folder, incoming_data_file_name)
-# incoming_tweets_data.show()
-#
-# tweet_predictions = run_and_save_incoming_tweets_prediction(pipeline=fitted_pipeline,
-#                                                             raw_new_tweets=incoming_tweets_data)
-#
-# tweet_predictions.show()
-#
-# tweet_predictions.toPandas().to_csv('results/incoming_twitter_data_predictions.csv')
+
+if __name__ == "__main__":
+
+    # train or load LR pipeline
+    df_predictions, fitted_pipeline = train_evaluate_save_pipeline()
+
+
+    # incoming tweets
+    incoming_tweets_data = read_csv_to_spark_df(data_destination_folder, incoming_data_file_name)
+
+    tweet_predictions = run_and_save_incoming_tweets_prediction(pipeline=fitted_pipeline,
+                                                                raw_new_tweets=incoming_tweets_data)
+
+    tweet_predictions.toPandas().to_csv('results/incoming_twitter_data_predictions.csv')
+
+
+    # save to Azure Blob Storage
+
+
+    # # Upload data to Azure Blob Storage
+
+    source_folder = 'results/'
+
+    csvs = get_files(source_folder)
+    print(csvs)
+
+    # should not be in main.py but in some kinda config file.
+    connection_string='DefaultEndpointsProtocol=https;AccountName=digitalpowerstorage1;AccountKey=tL2YmYTqrfeGma1/DRaTH9RTmZNKKZLn6O6fDKI3JnmJGfW8Nb+F2zRJ8m7uPRF71l5O1BRb88SrDc1lw+Pb+A==;EndpointSuffix=core.windows.net'
+
+    # upload data to Azure Blob Storage
+    upload(csvs, connection_string, "dp-blob1")
+
+
+# Power BI report url
+# https://app.powerbi.com/groups/me/reports/0e18216b-199f-424a-b709-5e40727da492/ReportSection
+""" Power BI report cannot be shared as my account type is still trial/private. With a premium account the report
+can be shared safely with anyone.
+The dataset behind the report updates every day at 01:00 am. It does this by retrieving the data from the Blob Storage
+again. Depending on whether the Blob Storage data is up to date the report is up to date. 
+Note, the 'last updated' indicator in the Power BI report only shows the last time the data was successfully retrieved
+from the blob storage, but does not indicate whether that data is up to date...."""
+
+
+
+
+
+
+
+
+
 
 
 # from pyspark import SparkContext
