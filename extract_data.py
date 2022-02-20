@@ -9,9 +9,10 @@ import pandas as pd
 # os.environ["KAGGLE_USERNAME"] = "brentvdwijdeven"
 # os.environ["KAGGLE_KEY"] = "<683beb99f461a29642db9fdd2f0ac185"
 
-# BEST IS TO USE kaggle.json BUT THIS FILE SHOULD BE PLACED IN USER HOME DIRECTORY!
+# BEST IS TO USE kaggle.json BUT THIS FILE SHOULD BE PLACED IN USER HOME DIRECTORY (add this in Docker container) !
+# For now, use pycharm environment variables to solve the problem
 
-# so for now, use pycharm environment variables to solve the problem
+
 def download_and_unzip_twitter_dataset(destination_folder, download_data_file_name):
 
     # initialize Kaggle api
@@ -21,6 +22,7 @@ def download_and_unzip_twitter_dataset(destination_folder, download_data_file_na
     # download zip file with data
     api.dataset_download_files('kazanova/sentiment140', path='./')
 
+    # extract zipfile content to destination folder
     with zipfile.ZipFile('sentiment140.zip', 'r') as zipref:
         zipref.extractall(destination_folder)
 
@@ -35,6 +37,11 @@ def download_and_unzip_twitter_dataset(destination_folder, download_data_file_na
 
 
 def split_dataset_training_and_incoming_sets(destination_folder, download_data_file_name, file_name, incoming_data_file_name):
+    """ This function split the downloaded Twitter dataset into two files.
+        file_name: for the file that will be considered the training data
+        incoming_data_file_name: for the file that will be considered as newly incoming tweets. Goal is to simulate
+        retrieving new tweets as well besides the original training data. With the current setup, the Kaggle datasets
+        are static and would never 'give' new data. """
 
     # read twitter csv
     file_path = destination_folder + download_data_file_name
@@ -49,11 +56,11 @@ def split_dataset_training_and_incoming_sets(destination_folder, download_data_f
     twitter_data.columns = ['target', 'ids', 'date', 'flags', 'user', 'text']
 
 
-
     train_test_validate_set = twitter_data.iloc[:train_set_size, :].copy()
     incoming_tweets_set = twitter_data.iloc[train_set_size:, :].copy()
 
-    # # adjust date column to appropriate datetime format
+    # # adjust date column to appropriate datetime format. Excluded for now as pandas implementation is too slow,
+    # # pyspark implementation is required here.
     # incoming_tweets_set['date'] = pd.to_datetime(incoming_tweets_set["date"])
     # incoming_tweets_set['date'] = pd.to_datetime(incoming_tweets_set["date"].dt.strftime("%d/%m/%y %H:%M"))
 
@@ -61,15 +68,17 @@ def split_dataset_training_and_incoming_sets(destination_folder, download_data_f
           'running the pipeline')
 
     # save incoming_tweets_set to csv to load it at a later stage
-    # save as parquet might be faster, but with csv its easier to inspect and show df
+    # save as parquet might be faster, but with csv it's easier to inspect and show df
     train_test_validate_set.to_csv(destination_folder + file_name, index=False, header=False)
     incoming_tweets_set.to_csv(destination_folder + incoming_data_file_name, index=False, header=False)
 
     return train_test_validate_set
 
+
 def download_or_load_dataset(destination_folder, download_data_file_name, file_name, incoming_data_file_name):
     """ Opzet is nu een one-time download en nog niet een daily api call of iets dergelijks. dus nog niet optimaal. """
 
+    # Check if the dataset is not yet downloaded. Only then start downloading and splitting the dataset.
     if not os.path.exists(destination_folder + download_data_file_name):
 
         # download and unzip twitter dataset
@@ -86,8 +95,6 @@ def download_or_load_dataset(destination_folder, download_data_file_name, file_n
 """
 Possible improvements:
  - replace kaggle api with twitter api. Call twitter api directly and extract data there on a daily/hourly/...
-    basis. 
-    Then, also find a better way to store this data 
-     
+    basis. But, this is quite a big task.     
 """
 
