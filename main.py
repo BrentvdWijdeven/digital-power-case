@@ -3,7 +3,7 @@ from train_pipeline import read_csv_to_spark_df, drop_columns_and_rows, train_te
     evaluate_pipeline_performance
 from upload_to_blob import upload, get_files
 import timeit
-
+import webbrowser
 
 # determine script runtime
 start_time = timeit.default_timer()
@@ -69,6 +69,7 @@ def run_and_save_incoming_tweets_prediction(pipeline, raw_new_tweets):
 
 if __name__ == "__main__":
 
+
     # train or load LR pipeline
     df_predictions, fitted_pipeline = train_evaluate_save_pipeline()
 
@@ -98,11 +99,14 @@ if __name__ == "__main__":
     # upload data to Azure Blob Storage
     upload(csvs, connection_string, "dp-blob1")
 
+    powerbi_report_url = "https://app.powerbi.com/links/GzxVnj6fHN?ctid=2cb92ade-04ef-489b-aa1a-e5bbb5a0cc4c&pbi_source=linkShare"
+
+    webbrowser.open(powerbi_report_url)
+
 
 # Power BI report url
 # https://app.powerbi.com/groups/me/reports/0e18216b-199f-424a-b709-5e40727da492/ReportSection
-""" Power BI report cannot be shared as my account type is still trial/private. With a premium account the report
-can be shared safely with anyone.
+""" 
 The dataset behind the report updates every day at 01:00 am. It does this by retrieving the data from the Blob Storage
 again. Depending on whether the Blob Storage data is up to date the report is up to date. 
 Note, the 'last updated' indicator in the Power BI report only shows the last time the data was successfully retrieved

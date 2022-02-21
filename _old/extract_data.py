@@ -78,22 +78,18 @@ def split_dataset_training_and_incoming_sets(destination_folder, download_data_f
 def download_or_load_dataset(destination_folder, download_data_file_name, file_name, incoming_data_file_name):
     """ Opzet is nu een one-time download en nog niet een daily api call of iets dergelijks. dus nog niet optimaal. """
 
-    # create separate train and incoming dataset
-    split_dataset_training_and_incoming_sets(destination_folder, download_data_file_name, file_name,
-                                             incoming_data_file_name)
+    # Check if the dataset is not yet downloaded. Only then start downloading and splitting the dataset.
+    if not os.path.exists(destination_folder + download_data_file_name):
 
-    # # Check if the dataset is not yet downloaded. Only then start downloading and splitting the dataset.
-    # if not os.path.exists(destination_folder + download_data_file_name):
+        # download and unzip twitter dataset
+        download_and_unzip_twitter_dataset(destination_folder, download_data_file_name)
 
-    #     # download and unzip twitter dataset
-    #     download_and_unzip_twitter_dataset(destination_folder, download_data_file_name)
+        # create separate train and incoming dataset
+        split_dataset_training_and_incoming_sets(destination_folder, download_data_file_name, file_name,
+                                                 incoming_data_file_name)
 
-    #     # create separate train and incoming dataset
-    #     split_dataset_training_and_incoming_sets(destination_folder, download_data_file_name, file_name,
-    #                                              incoming_data_file_name)
-
-    # else:
-    #     print('Dataset is already downloaded and is available in destination folder')
+    else:
+        print('Dataset is already downloaded and is available in destination folder')
 
 
 """
