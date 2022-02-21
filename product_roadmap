@@ -1,0 +1,10 @@
+Product roadmap items:
+- Design tests for data pipeline to ensure stable performance.
+- Add config file in which all arguments/variables are defined
+- Mask secrets / retrieve secrets from Azure
+- Set-up cron job inside Docker container. (to simulate dynamic data retrieval with e.g. Twitter API)
+- Twitter_data retrieval with Kaggle API directly. Resolve Authentication error experienced now
+(as shown in _old/data_extract.py file)
+- Improve performance of data pipeline. Pyspark computation time drastically increased when switching from local
+machine to Docker implementation.
+- Prediction component is not optimized at all. Add e.g. hyperparameter tuning and create additional features.

@@ -2,11 +2,13 @@
 
 #### The Twitter Sentiment Analysis product consists of a containerized data pipeline, Azure Storage Account and a Power BI dashboard
 The end-product is the Power BI dashboard which provides insights into the Twitter Sentiment Analysis data.
-The dataset behind this dashboard is linked to an Azure Blob Storage and retrieves the data from that Blob once a day (01 am Berlin time)
-The containerized data pipeline builds upon a Kaggle dataset: https://www.kaggle.com/kazanova/sentiment140.
+The dataset behind this dashboard is linked to an Azure Blob Storage and retrieves the data from that Blob once a day (01 am Berlin time). \
+The containerized data pipeline builds upon a Kaggle dataset: https://www.kaggle.com/kazanova/sentiment140.\
 This dataset is to be made available in the 'data/twitter_sentiment/' folder with file name 'twitter_data.csv'.
 
 _A later release of this data product would contain a dynamic retrieval of this dataset by means of the Kaggle API (as shown in "old/extract_data.py")._
+
+Roadmap for data product is documented in __product_roadmap.txt__.
 
 ### Power BI report
 The Power BI report is published in a Power BI workspace which requires access rights.
@@ -19,6 +21,8 @@ https://app.powerbi.com/links/GzxVnj6fHN?ctid=2cb92ade-04ef-489b-aa1a-e5bbb5a0cc
 
 
 ### Clone Github repo locally
+First, clone the GitHub repository locally.
+
 File structure:
 - data
   - twitter_sentiment
@@ -37,20 +41,22 @@ File structure:
 
 
 ### Install Docker desktop
-First, install Docker desktop via: 
+Then, install Docker desktop via: 
     
     https://www.docker.com/products/docker-desktop
 
-### Build & Run Docker container
-The Twitter Sentiment Analysis product runs in a Docker container. 
+### Build Docker container & Run data pipeline
+The Twitter Sentiment Analysis data pipeline runs in a Docker container. 
 Build Docker image based on __Dockerfile__ in local repository: 
 
     docker build --rm -t <docker-image-name> .
     
     For example:
-    docker build --rm -t brentvdwijdeven/pyspark-docker-dp .
+    docker build --rm -t brentvdwijdeven/pyspark-docker-dp . 
 
-Building the Docker Image also runs the file __main.py__ which runs the entire data pipeline.
+#### Please note, building the Docker Image also runs the file __main.py__ which runs the entire data pipeline.
+
+### Run existing Docker container and command to run data pipeline
 
 
 Then, depending on your operating system, run the docker image. 
