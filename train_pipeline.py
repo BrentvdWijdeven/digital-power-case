@@ -12,7 +12,7 @@ from pyspark.ml import Pipeline, PipelineModel  # ik begrijp het verschil hiertu
 from pyspark.ml.evaluation import BinaryClassificationEvaluator
 
 
-""" De initialize moet mogelijk naar main.py"""
+""" De initialize moet/kan mogelijk naar main.py."""
 # Initialize spark session
 sc = SparkContext.getOrCreate()
 spark = SparkSession.builder.master('local[*]').appName('twitter_sentiment_analysis').config("spark.ui.port", "4040")\
@@ -36,7 +36,6 @@ def read_csv_to_spark_df(data_path, file_name):
     spark_df = spark.read.format("csv").option("header", "false").option("delimiter", ",").schema(schema) \
         .load(data_path + file_name)
 
-
     return spark_df
 
 
@@ -45,10 +44,11 @@ def drop_columns_and_rows(df, columns_to_drop):  # can add type of df here in fu
     # drop columns
     df = df.drop(*columns_to_drop)
 
-    # drop rows with nan values
+    # drop rows with nan values. Decided to just drop all rows with any missing values.
     df = df.dropna(how='any')
 
     return df
+
 
 # wil ik train, test, valid sets nog opslaan? heb wel seed=2000 staan al....
 def train_test_split(df, split_percentages):
@@ -56,7 +56,6 @@ def train_test_split(df, split_percentages):
     # split_percentages is list with three percentages: train, valid, test
     (train_set, val_set, test_set) = df.randomSplit(split_percentages, seed=2000)
 
-    # hier nog ff testen of de dubbele () niet teveel is
     return train_set, val_set, test_set
 
 
@@ -68,14 +67,10 @@ First, check number of partitions in dataframe via df.rdd.getNumPartitions() Aft
 df.repartition(100)
 """
 
-# evt toevoegen: parameter tuning logistic regression, text cleaning, confusion matrix evaluation
-
-# function: create pipeline and run pipeline
-
 
 def save_pipeline(pipeline_model, path):
-    # SAVE MODEL PIPELINE TO PATH
 
+    # SAVE MODEL PIPELINE TO PATH
     pipeline_model.write().overwrite().save(path)
 
     return print('Pipeline saved to {}'.format(path))
@@ -93,6 +88,7 @@ def create_classification_pipeline():
     # Initialize Logistic Regression Step
     lr = LogisticRegression(maxIter=100)
 
+    # Alternative implementation
     # stage_4 = LogisticRegression(featuresCol='features', labelCol='Runs') # hiervoor ook Vector Assembler gebruiken
 
     # Establish pipeline based on the steps defined before
@@ -101,7 +97,7 @@ def create_classification_pipeline():
     return pipeline
 
 
-def fit_lr_model_pipeline(pipeline_model, pipeline_path, model_path, train_set):
+def fit_and_save_lr_model_pipeline(pipeline_model, pipeline_path, model_path, train_set):
 
     # fit pipeline to train dataset
     fit_pipeline = pipeline_model.fit(train_set)
@@ -111,11 +107,9 @@ def fit_lr_model_pipeline(pipeline_model, pipeline_path, model_path, train_set):
 
     # save pipeline
     save_pipeline(fit_pipeline, path=pipeline_path)
-    # fit_pipeline.write().overwrite().save(pipeline_path)
 
     # save model
     lr_model = fit_pipeline.stages[4]
-    print(lr_model)
     lr_model.write().overwrite().save(model_path)
 
     return fit_pipeline, train_df_fitted
@@ -128,7 +122,7 @@ def load_or_fit_model_pipeline(pipeline_path, model_path, train_set):
 
         pipeline = create_classification_pipeline()
 
-        pipelineFit, train_df_fitted = fit_lr_model_pipeline(pipeline_model=pipeline,
+        pipelineFit, train_df_fitted = fit_and_save_lr_model_pipeline(pipeline_model=pipeline,
                                                              pipeline_path=pipeline_path,
                                                              model_path=model_path, train_set=train_set)
 
@@ -148,10 +142,8 @@ def load_or_fit_model_pipeline(pipeline_path, model_path, train_set):
 
 def evaluate_pipeline_performance(test_set, pipeline_fitted):
 
-    test_set.show()
     # transform validation dataset (or test dataset
     predictions_dataset = pipeline_fitted.transform(test_set)
-    predictions_dataset.show(5)
 
     # evaluate function
     evaluator = BinaryClassificationEvaluator(rawPredictionCol="rawPrediction")
@@ -168,3 +160,12 @@ def evaluate_pipeline_performance(test_set, pipeline_fitted):
 
     return accuracy, roc_auc, predictions_dataset
 
+
+"""
+Possible improvements:
+# evt toevoegen: parameter tuning logistic regression, text cleaning, confusion matrix evaluation
+# additional features (even ones less relevant to the use case of sentiment analysis).
+
+
+
+"""
