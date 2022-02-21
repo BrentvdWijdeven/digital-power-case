@@ -6,11 +6,11 @@ docker build --rm -t brentvdwijdeven/pyspark-docker-test .
 
 
 # Run main.py in docker container
-docker run 
+docker run --platform linux/amd64 --entrypoint /bin/sh -itd -v $(pwd):/job brentvdwijdeven/pyspark-docker-test
 
 # option: docker run --platform linux/amd64  -v $(pwd):/job brentvdwijdeven/pyspark-docker-test main.py
 
-# docker run --platform linux/amd64 -v $(pwd):/job brentvdwijdeven/pyspark-docker-test	
+# docker run --platform linux/amd64 -v $(pwd):/job brentvdwijdeven/pyspark-docker-test
 
 
 
