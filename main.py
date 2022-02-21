@@ -84,8 +84,6 @@ if __name__ == "__main__":
 
 
     # save to Azure Blob Storage
-
-
     # # Upload data to Azure Blob Storage
 
     source_folder = 'results/'
@@ -139,8 +137,7 @@ from the blob storage, but does not indicate whether that data is up to date....
 #
 #
 # spark_df = spark.read.format('csv').option('header', True).\
-#     load("wasbs://dp-blob1@digitalpowerstorage1.blob.core.windows.net/incoming_twitter_data.csv")
-#
+#     load("wasbs://dp-blob1@digitalpowerstorage1.blob.core.windows.net/incoming_twitter_data.csv")#
 
 
 
