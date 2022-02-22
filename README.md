@@ -1,7 +1,7 @@
 # digital-power-case
 
 #### The Twitter Sentiment Analysis product consists of a containerized data pipeline, Azure Storage Account and a Power BI dashboard
-The end-product is the Power BI dashboard which provides insights into the Twitter Sentiment Analysis data.
+The end-product is a Power BI dashboard which provides insights into the Twitter Sentiment Analysis data.
 The dataset behind this dashboard is linked to an Azure Blob Storage and retrieves the data from that Blob once a day (01 am Berlin time). \
 The containerized data pipeline builds upon a Kaggle dataset: https://www.kaggle.com/kazanova/sentiment140.\
 This dataset is to be made available in the 'data/twitter_sentiment/' folder with file name 'twitter_data.csv'.
@@ -76,11 +76,13 @@ Then starting container also keeps it running!
 
     docker start <containter_id>
 
-Next, open Docker container CLI using Docker app UI. Go to 'Containers / Apps' and select the CLI button for your 
-running container. This allows you to interact with the running docker container
+To interact with the container, via command line, you started add:
 
+    docker exec -t -i <container_id> /bin/bash
 
+In the running container command line:
 
+    python3 main.py
 
-
-
+This runs the entire data pipeline and stores the transformed data into the Azure Blob Storage. 
+The next 01 am the Power BI report will refresh and show the new data.

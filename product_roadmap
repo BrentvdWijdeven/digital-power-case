@@ -8,3 +8,11 @@ Product roadmap items:
 - Improve performance of data pipeline. Pyspark computation time drastically increased when switching from local
 machine to Docker implementation.
 - Prediction component is not optimized at all. Add e.g. hyperparameter tuning and create additional features.
+
+
+Additional ideas
+- Migrate entire Docker implementation to Azure. E.g. python scripts to Databricks & create Azure Container Instance.
+- Add Apache Airflow to orchestrate data pipeline.
+- Monitor costs of Azure implementation with Power BI. Currently using free trials and no clear sight on incurred costs.
+- Replace csv's with e.g. PostgreSQL database instance hosted in a separate Docker container.
+Then, compose Docker containers.

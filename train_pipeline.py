@@ -117,6 +117,8 @@ def fit_and_save_lr_model_pipeline(pipeline_model, pipeline_path, model_path, tr
 
 def load_or_fit_model_pipeline(pipeline_path, model_path, train_set):
 
+    print(os.path.exists('model/lr_model_pipeline'))
+
     if not os.path.exists('model/lr_model_pipeline'):
         print('Pipeline does not exist, start fitting pipeline now')
 
